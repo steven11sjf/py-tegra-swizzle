@@ -1,6 +1,6 @@
-use std::{char::from_u32, num::NonZeroU32};
+use std::num::NonZeroU32;
 
-use pyo3::{ffi::PyObject, prelude::*, types::{PyByteArray, PyBytes}, wrap_pyfunction};
+use pyo3::{prelude::*, types::PyBytes, wrap_pyfunction};
 
 use tegra_swizzle::{self, surface::BlockDim, BlockHeight};
 
@@ -63,14 +63,14 @@ fn swizzled_surface_size(
     )
 }
 
-// TODO: can't figure out how to return a `bytes` LMAO
-// fn deswizzle_block_linear<'a>(py: Python<'a>, width: u32, height: u32, depth: u32, source: &PyBytes, block_height: u32, bytes_per_pixel: u32) -> PyResult<&'a PyAny> {
-//     let src = source.as_bytes();
-//     let bk_height = BlockHeight::new(block_height).unwrap();
-//     let d = tegra_swizzle::swizzle::deswizzle_block_linear(width, height, depth, src, bk_height, bytes_per_pixel).unwrap();
-//     let des: &[u8] = &d;
-//     Ok(PyBytes::new(py, des).into())
-// }
+#[pyfunction]
+fn deswizzle_block_linear(py: Python, width: u32, height: u32, depth: u32, source: &PyBytes, block_height: u32, bytes_per_pixel: u32) -> Py<PyBytes> {
+    let src = source.as_bytes();
+    let bk_height = BlockHeight::new(block_height).unwrap();
+    let res1 = tegra_swizzle::swizzle::deswizzle_block_linear(width, height, depth, src, bk_height, bytes_per_pixel).unwrap();
+    let res2: Py<PyBytes> = PyBytes::new(py, res1.as_slice()).into();
+    res2
+}
 
 /// A Python module implemented in Rust.
 #[pymodule]
@@ -78,7 +78,7 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(block_height_mip0, m)?)?;
     m.add_function(wrap_pyfunction!(mip_block_height, m)?)?;
     m.add_function(wrap_pyfunction!(swizzled_surface_size, m)?)?;
-    //m.add_function(wrap_pyfunction!(deswizzle_block_linear, m)?)?;
+    m.add_function(wrap_pyfunction!(deswizzle_block_linear, m)?)?;
     m.add_class::<PyBlockDim>()?;
     Ok(())
 }

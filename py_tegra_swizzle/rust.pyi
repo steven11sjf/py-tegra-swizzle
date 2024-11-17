@@ -50,4 +50,19 @@ def swizzled_surface_size(width: int, height: int, depth: int, block_dim: PyBloc
     :param block_height_mip0: see function block_height_mip0
     :param bytes_per_pixel: number of bytes in each pixel
     :param mipmap_count: number of mipmap levels
-    :param layer_count: number of layers"""
+    :param layer_count: number of layers
+    """
+
+def deswizzle_block_linear(width: int, height: int, depth: int, source: bytes, block_height: int, bytes_per_pixel: int) -> bytes:
+    """
+    Untiles the blocks from source using block linear format.
+    
+    :param width: The width of the surface in blocks
+    :param height: The height of the surface in blocks
+    :param depth: The depth of the surface in blocks
+    :param source: The raw data for the surface
+    :param block_height: The block height (1,2,4,8,16,32)
+    :param bytes_per_pixel: Number of bytes per pixel
+
+    :returns: The deswizzled surface as bytes
+    """
