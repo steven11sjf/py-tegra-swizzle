@@ -70,3 +70,6 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+# version file
+py_tegra_swizzle/version.py
