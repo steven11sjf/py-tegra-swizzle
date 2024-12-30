@@ -67,7 +67,7 @@ jobs:
       - name: Avoid issues with Git's solution for CVE-2022-24765 breaking setuptools-scm
         run: git config --global --add safe.directory $(pwd)
 
-      - uses: Swatinem/rust-cache@v2.7.5
+      - uses: Swatinem/rust-cache@v2.7.7
 
       - run: /opt/python/cp310-cp310/bin/python -m venv .venv
      
