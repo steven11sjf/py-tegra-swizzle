@@ -47,13 +47,28 @@ def deswizzle_block_linear(width: int, height: int, depth: int, source: bytes, b
     :param width: The width of the surface in blocks
     :param height: The height of the surface in blocks
     :param depth: The depth of the surface in blocks
+    :param source: The swizzled data for the surface
+    :param block_height: The block height (1,2,4,8,16,32)
+    :param bytes_per_pixel: Number of bytes per pixel
+
+    :returns: The raw surface as bytes
+    """
+    return rust.deswizzle_block_linear(width, height, depth, source, block_height, bytes_per_pixel)
+
+def swizzle_block_linear(width: int, height: int, depth: int, source: bytes, block_height: int, bytes_per_pixel: int) -> bytes:
+    """
+    Tiles the blocks from source using block linear format.
+    
+    :param width: The width of the surface in blocks
+    :param height: The height of the surface in blocks
+    :param depth: The depth of the surface in blocks
     :param source: The raw data for the surface
     :param block_height: The block height (1,2,4,8,16,32)
     :param bytes_per_pixel: Number of bytes per pixel
 
-    :returns: The deswizzled surface as bytes
+    :returns: The swizzled surface as bytes
     """
-    return rust.deswizzle_block_linear(width, height, depth, source, block_height, bytes_per_pixel)
+    return rust.swizzle_block_linear(width, height, depth, source, block_height, bytes_per_pixel)
 
 __version__ = version.version
 VERSION = version.version

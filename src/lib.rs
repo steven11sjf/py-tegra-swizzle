@@ -1,6 +1,6 @@
 use std::num::NonZeroU32;
 
-use pyo3::{prelude::*, types::PyBytes, wrap_pyfunction};
+use pyo3::{exceptions::PyValueError, prelude::*, types::PyBytes, wrap_pyfunction};
 
 use tegra_swizzle::{self, surface::BlockDim, BlockHeight};
 
@@ -64,12 +64,23 @@ fn swizzled_surface_size(
 }
 
 #[pyfunction]
-fn deswizzle_block_linear(py: Python, width: u32, height: u32, depth: u32, source: &PyBytes, block_height: u32, bytes_per_pixel: u32) -> Py<PyBytes> {
+fn deswizzle_block_linear<'a>(py: Python<'a>, width: u32, height: u32, depth: u32, source: &PyBytes, block_height: u32, bytes_per_pixel: u32) -> PyResult<&'a PyBytes> {
     let src = source.as_bytes();
     let bk_height = BlockHeight::new(block_height).unwrap();
-    let res1 = tegra_swizzle::swizzle::deswizzle_block_linear(width, height, depth, src, bk_height, bytes_per_pixel).unwrap();
-    let res2: Py<PyBytes> = PyBytes::new(py, res1.as_slice()).into();
-    res2
+    match tegra_swizzle::swizzle::deswizzle_block_linear(width, height, depth, src, bk_height, bytes_per_pixel) {
+        Ok(v) => Ok(PyBytes::new(py, v.as_slice())),
+        Err(e) => Err( PyValueError::new_err(e.to_string())),
+    }
+}
+
+#[pyfunction]
+fn swizzle_block_linear<'a>(py: Python<'a>, width: u32, height: u32, depth: u32, source: &PyBytes, block_height: u32, bytes_per_pixel: u32) -> PyResult<&'a PyBytes> {
+    let src = source.as_bytes();
+    let bk_height = BlockHeight::new(block_height).unwrap();
+    match tegra_swizzle::swizzle::swizzle_block_linear(width, height, depth, src, bk_height, bytes_per_pixel) {
+        Ok(v)  => Ok(PyBytes::new(py, v.as_slice())),
+        Err(e) => Err(PyValueError::new_err(e.to_string())),
+    }
 }
 
 /// A Python module implemented in Rust.
@@ -79,6 +90,7 @@ fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(mip_block_height, m)?)?;
     m.add_function(wrap_pyfunction!(swizzled_surface_size, m)?)?;
     m.add_function(wrap_pyfunction!(deswizzle_block_linear, m)?)?;
+    m.add_function(wrap_pyfunction!(swizzle_block_linear, m)?)?;
     m.add_class::<PyBlockDim>()?;
     Ok(())
 }
