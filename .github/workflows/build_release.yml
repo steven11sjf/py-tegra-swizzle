@@ -24,8 +24,8 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: py_tegra_swizzle-{{ matrix.runs-on }}.dll
-        path: py_tegra_swizzle\target\debug\py_tegra_swizzle-{{ matrix.runs-on }}.dll
+        name: py_tegra_swizzle-${{ matrix.runs-on }}.dll
+        path: py_tegra_swizzle\target\debug\py_tegra_swizzle-${{ matrix.runs-on }}.dll
         if-no-files-found: error
 
   attach:
@@ -36,7 +36,7 @@ jobs:
     - name: Download Artifact
       uses: actions/download-artifact@v4
       with:
-        name: py_tegra_swizzle-{{ matrix.runs-on }}.dll
+        name: py_tegra_swizzle-${{ matrix.runs-on }}.dll
 
     - uses: montudor/action-zip@v1
       with:
