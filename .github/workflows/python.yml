@@ -12,17 +12,14 @@ on:
     branches:
       - main
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
         os:
-          - 'macos-13'
+          - 'macos-latest'
+          - 'macos-15-intel'
           - 'windows-latest'
 
     runs-on: ${{ matrix.os }}
@@ -30,22 +27,39 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: 'recursive'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.8.22"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Add powerpc-unknown-linux-gnu
+        run: rustup target add --toolchain 1.85.1 powerpc-unknown-linux-gnu
+
+      - uses: Swatinem/rust-cache@v2.9.1
       
       - name: Build wheels
-        run: pipx run cibuildwheel==2.14.1 --output-dir dist
+        run: uvx cibuildwheel==3.2.0 --output-dir dist
         env:
           CIBW_BUILD: 'cp310-*'
           CIBW_SKIP: '*-win32 *-manylinux_i686'
+          CIBW_ARCHS_MACOS: "${{ matrix.os == 'macos-15-intel' && 'x86_64' || 'arm64' }}"
+          MACOSX_DEPLOYMENT_TARGET: '10.12'
 
       - name: Check if there are changes
         run: git diff --exit-code
 
       - name: Store the packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: python-package-${{ matrix.os }}
           path: dist/
@@ -59,7 +73,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: 'recursive'
@@ -67,7 +81,10 @@ jobs:
       - name: Avoid issues with Git's solution for CVE-2022-24765 breaking setuptools-scm
         run: git config --global --add safe.directory $(pwd)
 
-      - uses: Swatinem/rust-cache@v2.7.7
+      - name: Add powerpc-unknown-linux-gnu
+        run: rustup target add --toolchain 1.85.1 powerpc-unknown-linux-gnu
+
+      - uses: Swatinem/rust-cache@v2.9.1
 
       - run: /opt/python/cp310-cp310/bin/python -m venv .venv
      
@@ -89,7 +106,7 @@ jobs:
         run: git diff --exit-code
 
       - name: Store the packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: python-package-linux
           path: dist/
@@ -102,7 +119,7 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: python-package-*
           merge-multiple: true
@@ -112,9 +129,11 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          password: ${{ secrets.testpypi_password }}
           repository-url: https://test.pypi.org/legacy/
-          verbose: true
-
+      
       - name: Publish 📦 to PyPI
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.pypi_password }}
