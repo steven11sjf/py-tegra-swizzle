@@ -128,6 +128,8 @@ jobs:
       - name: Publish 📦 to TestPyPI
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: pypa/gh-action-pypi-publish@release/v1
+        permissions:
+          id-token: write
         with:
           repository-url: https://test.pypi.org/legacy/
       
