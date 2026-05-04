@@ -113,6 +113,8 @@ jobs:
 
   pypi:
     runs-on: 'ubuntu-latest'
+    permissions:
+      id-token: write
     needs:
       - build
       - linux-build
@@ -128,8 +130,6 @@ jobs:
       - name: Publish 📦 to TestPyPI
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: pypa/gh-action-pypi-publish@release/v1
-        permissions:
-          id-token: write
         with:
           repository-url: https://test.pypi.org/legacy/
       
